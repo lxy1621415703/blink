@@ -2,6 +2,13 @@ name: Controller recovery experiments
 
 on:
   push:
+    paths:
+      - .github/workflows/experiments.yml
+      - requirements.txt
+      - source/recovery_benchmark.py
+      - source/run_upstream.py
+      - source/test_recovery_benchmark.py
+      - source/test_upstream_patch.py
   workflow_dispatch:
 
 permissions:
