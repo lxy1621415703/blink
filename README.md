@@ -76,6 +76,11 @@ At 100 groups, the equivalent shared-successor implementation reduced planner ti
 
 The new question is which recovery operations a particular QoS repair actually requires. Earlier phases gave every scheduler the same fixed recovery DAG. This phase derives that DAG from old and target forwarding paths, installed rule identities, surviving state replicas, state-version dependencies, and switch ownership. It preserves the earlier code and results as separate experiments.
 
+```bash
+python -m unittest discover -s source -p 'test_*closure.py' -v
+python source/benchmark_closure.py --output results/closure --suite all
+```
+
 ### Mechanism and objective
 
 1. Keep the old forwarding path running after the controller crash. A specified demand increase creates a service deficit; the controller crash does not itself erase forwarding rules.
@@ -113,3 +118,25 @@ All variants receive the same raw scenario, valid hot state, surviving replicas,
 The controls include fully coupled state, full hot standby, no old/new route overlap, and unchanged demand. Full hot standby must have zero state-transfer work; fully coupled state can remove state-slicing savings; unchanged demand has zero business deficit and requires no foreground QoS repair. No improvement is assumed for these controls.
 
 This is an executable mechanism simulation on synthetic topologies and paths, with explicitly reserved final capacity. Durations remain uncalibrated simulation ticks; planner measurements are wall-clock milliseconds. The two cannot be added to report end-to-end milliseconds. State bytes and rule counts are modeled operations, not observed transfer traffic or FlowMod measurements. No actual controller failover, quorum/fencing protocol, packet queues, in-flight packet consistency, or shared-link congestion is executed.
+
+### Verified closure results
+
+[Run 41792828283](https://github.com/lxy1621415703/blink/actions/runs/41792828283) succeeded at harness commit `c4fb35d95e527cb36f76ea20a2eb1e7f752668d5`. All 29 semantic tests passed. The frozen suite produced 675 independently audited plans across 215 scenarios, with zero violations in all 16 audit categories. The 126 unchanged-demand plan rows had zero business deficit, activation operations and business recovery time.
+
+The main comparison uses the 30 new mixed-profile holdout seeds, with eight flow groups each. The baseline already reuses matching rules and valid warm state, and allows useful operations before unrelated background preparation finishes.
+
+| Metric, mean across 30 paired seeds | Rule difference + full state preparation | Executable closure |
+| --- | ---: | ---: |
+| Build-and-schedule time, mean of per-instance medians (ms) | 3.7293 | 1.9449 |
+| Logical state payload prepared for this plan (bytes) | 152473.6 | 68881.1 |
+| Time until all deficient flows meet demand (ticks) | 25.2333 | 25.2000 |
+| Cumulative weighted unmet demand (rate-unit ticks) | 80045.3 | 80042.4 |
+| Completion of all scheduled work, including background (ticks) | 45.0000 | 25.2000 |
+
+Planner computation decreased by 47.85% and the current plan's state payload by 54.82%. Business recovery improved in one seed and tied in 29; its mean improvement was only 0.0333 ticks, with a paired bootstrap 95% difference interval of [0, 0.1] ticks. This experiment therefore supports a lighter foreground recovery plan, rather than a substantial business-recovery acceleration. Removing background work shortened total work completion by 44%, but that is not a 44% reduction in business outage duration. Full programmability restored later can still require the omitted state, so the state result is not a lifetime-transfer saving claim.
+
+The controls agree with that interpretation. Fully coupled state required the same logical payload in all three scopes and gave identical business metrics. Full hot standby required zero state preparation in all scopes and also gave identical business metrics. At 100 flow groups (five separate scale seeds), the closure reduced build-and-schedule time from 297.235 ms to 85.177 ms relative to full-state preparation, while both had the same mean business recovery time of 223.2 ticks. This is synthetic flow-group scaling, not a measured 100-node WAN.
+
+The more expensive closure-rollout reference was run only on the three predeclared seeds per split and profile. Its paired comparisons use those same seeds; its average must not be compared with the full 30-seed list-scheduler average.
+
+[Persistent full summary and paired comparisons](reports/closure-summary.json) · [Raw scenarios, plans, schedules, timings and audit evidence](https://github.com/lxy1621415703/blink/actions/runs/41792828283/artifacts/13303693719). The raw artifact has seven-day retention. The source and complete summary remain in this repository.
