@@ -1,0 +1,6 @@
+# Compatibility environment for Python 3.10; not the authors' original lockfile.
+# gurobipy is imported by upstream even in heuristic-only mode. No optimizer is run.
+numpy==1.26.4
+scipy==1.13.1
+gurobipy==11.0.3
+
