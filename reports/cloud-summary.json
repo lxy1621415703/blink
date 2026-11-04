@@ -1,0 +1,766 @@
+{
+  "run": {
+    "id": 41786900624,
+    "url": "https://github.com/lxy1621415703/blink/actions/runs/41786900624",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "1780e7da324049fbfb80de8bdeb3bbf7510c39e1",
+    "created_at": "2026-11-04T06:38:45Z",
+    "updated_at": "2026-11-04T06:39:24Z"
+  },
+  "environment": {
+    "dependency_environment": "Python 3.10 compatibility pins; not the authors' original environment",
+    "harness_commit": "1780e7da324049fbfb80de8bdeb3bbf7510c39e1",
+    "outcomes": {
+      "dependencies": "success",
+      "mechanism": "success",
+      "tests": "success",
+      "upstream": "success"
+    },
+    "packages": {
+      "gurobipy": "11.0.3",
+      "numpy": "1.26.4",
+      "scipy": "1.13.1"
+    },
+    "platform": "Linux-6.8.0-1070-azure-x86_64-with-glibc2.35",
+    "python": "3.10.22",
+    "python_hash_seed": "0",
+    "repository": "lxy1621415703/blink",
+    "run_attempt": "1",
+    "run_id": "41786900624"
+  },
+  "upstream": {
+    "author_rng_seed": 42,
+    "commit": "3f6cd3b6d3aca1ff38c3b985535d31bc7698fc05",
+    "compatibility_environment": {
+      "description": "Python 3.10 compatibility dependencies, not the authors' original environment",
+      "packages": {
+        "gurobipy": "11.0.3",
+        "numpy": "1.26.4",
+        "scipy": "1.13.1"
+      },
+      "platform": "Linux-6.8.0-1070-azure-x86_64-with-glibc2.35",
+      "python": "3.10.22"
+    },
+    "gurobi_license_required_for_this_path": false,
+    "known_upstream_failure_count": 5,
+    "optimizer_requested": false,
+    "phase": "A_author_heuristics",
+    "pipeline_success": true,
+    "python_hash_seed": 0,
+    "repository": "https://github.com/nu-lab/Controller-Load-Migration-Scheduling.git",
+    "runs": [
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations0.txt",
+          "true",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": null,
+        "error": null,
+        "instance": "migrations0.txt",
+        "instance_sha256": "eea76d9a7ebd0d136ee90dad6284db9d5709ef29a03d813ce2b715801374f9d4",
+        "known_upstream_failure": true,
+        "resiliency": true,
+        "returncode": 1,
+        "source_modified": false,
+        "status": "failed",
+        "stderr_file": "original_resilient/migrations0.stderr.txt",
+        "stdout_file": "original_resilient/migrations0.stdout.txt",
+        "success": false,
+        "timed_out": false,
+        "variant": "original_resilient",
+        "vector_first_fit_rounds": 6,
+        "wall_seconds": 0.364862
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations1.txt",
+          "true",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": null,
+        "error": null,
+        "instance": "migrations1.txt",
+        "instance_sha256": "0eb6c254bf06c2d1a4828e50f5ab0c0b9c8851feffc06d454546da0ce7739087",
+        "known_upstream_failure": true,
+        "resiliency": true,
+        "returncode": 1,
+        "source_modified": false,
+        "status": "failed",
+        "stderr_file": "original_resilient/migrations1.stderr.txt",
+        "stdout_file": "original_resilient/migrations1.stdout.txt",
+        "success": false,
+        "timed_out": false,
+        "variant": "original_resilient",
+        "vector_first_fit_rounds": 4,
+        "wall_seconds": 0.365262
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations2.txt",
+          "true",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": null,
+        "error": null,
+        "instance": "migrations2.txt",
+        "instance_sha256": "00ebc1a2abfb6f1792fb650f8298a94cec071e8e7d6e72ffd262221feddf6450",
+        "known_upstream_failure": true,
+        "resiliency": true,
+        "returncode": 1,
+        "source_modified": false,
+        "status": "failed",
+        "stderr_file": "original_resilient/migrations2.stderr.txt",
+        "stdout_file": "original_resilient/migrations2.stdout.txt",
+        "success": false,
+        "timed_out": false,
+        "variant": "original_resilient",
+        "vector_first_fit_rounds": 2,
+        "wall_seconds": 0.365099
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations3.txt",
+          "true",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": null,
+        "error": null,
+        "instance": "migrations3.txt",
+        "instance_sha256": "84e286625cd0fb0f01d84c494b5af385f6e78fbe0eacba635f526ee7bfbcd7d4",
+        "known_upstream_failure": true,
+        "resiliency": true,
+        "returncode": 1,
+        "source_modified": false,
+        "status": "failed",
+        "stderr_file": "original_resilient/migrations3.stderr.txt",
+        "stdout_file": "original_resilient/migrations3.stdout.txt",
+        "success": false,
+        "timed_out": false,
+        "variant": "original_resilient",
+        "vector_first_fit_rounds": 8,
+        "wall_seconds": 0.3653
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations0.txt",
+          "false",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": 4,
+        "error": null,
+        "instance": "migrations0.txt",
+        "instance_sha256": "eea76d9a7ebd0d136ee90dad6284db9d5709ef29a03d813ce2b715801374f9d4",
+        "known_upstream_failure": false,
+        "resiliency": false,
+        "returncode": 0,
+        "source_modified": false,
+        "status": "passed",
+        "stderr_file": "original_destination_only/migrations0.stderr.txt",
+        "stdout_file": "original_destination_only/migrations0.stdout.txt",
+        "success": true,
+        "timed_out": false,
+        "variant": "original_destination_only",
+        "vector_first_fit_rounds": 4,
+        "wall_seconds": 0.364788
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations1.txt",
+          "false",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": null,
+        "error": null,
+        "instance": "migrations1.txt",
+        "instance_sha256": "0eb6c254bf06c2d1a4828e50f5ab0c0b9c8851feffc06d454546da0ce7739087",
+        "known_upstream_failure": true,
+        "resiliency": false,
+        "returncode": 1,
+        "source_modified": false,
+        "status": "failed",
+        "stderr_file": "original_destination_only/migrations1.stderr.txt",
+        "stdout_file": "original_destination_only/migrations1.stdout.txt",
+        "success": false,
+        "timed_out": false,
+        "variant": "original_destination_only",
+        "vector_first_fit_rounds": 4,
+        "wall_seconds": 0.365038
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations2.txt",
+          "false",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": 2,
+        "error": null,
+        "instance": "migrations2.txt",
+        "instance_sha256": "00ebc1a2abfb6f1792fb650f8298a94cec071e8e7d6e72ffd262221feddf6450",
+        "known_upstream_failure": false,
+        "resiliency": false,
+        "returncode": 0,
+        "source_modified": false,
+        "status": "passed",
+        "stderr_file": "original_destination_only/migrations2.stderr.txt",
+        "stdout_file": "original_destination_only/migrations2.stdout.txt",
+        "success": true,
+        "timed_out": false,
+        "variant": "original_destination_only",
+        "vector_first_fit_rounds": 2,
+        "wall_seconds": 0.365085
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations3.txt",
+          "false",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": 8,
+        "error": null,
+        "instance": "migrations3.txt",
+        "instance_sha256": "84e286625cd0fb0f01d84c494b5af385f6e78fbe0eacba635f526ee7bfbcd7d4",
+        "known_upstream_failure": false,
+        "resiliency": false,
+        "returncode": 0,
+        "source_modified": false,
+        "status": "passed",
+        "stderr_file": "original_destination_only/migrations3.stderr.txt",
+        "stdout_file": "original_destination_only/migrations3.stdout.txt",
+        "success": true,
+        "timed_out": false,
+        "variant": "original_destination_only",
+        "vector_first_fit_rounds": 8,
+        "wall_seconds": 0.365151
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations0.txt",
+          "true",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": 6,
+        "error": null,
+        "instance": "migrations0.txt",
+        "instance_sha256": "eea76d9a7ebd0d136ee90dad6284db9d5709ef29a03d813ce2b715801374f9d4",
+        "known_upstream_failure": false,
+        "resiliency": true,
+        "returncode": 0,
+        "source_modified": true,
+        "status": "passed",
+        "stderr_file": "patched_resilient/migrations0.stderr.txt",
+        "stdout_file": "patched_resilient/migrations0.stdout.txt",
+        "success": true,
+        "timed_out": false,
+        "variant": "patched_resilient",
+        "vector_first_fit_rounds": 6,
+        "wall_seconds": 0.364832
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations1.txt",
+          "true",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": 4,
+        "error": null,
+        "instance": "migrations1.txt",
+        "instance_sha256": "0eb6c254bf06c2d1a4828e50f5ab0c0b9c8851feffc06d454546da0ce7739087",
+        "known_upstream_failure": false,
+        "resiliency": true,
+        "returncode": 0,
+        "source_modified": true,
+        "status": "passed",
+        "stderr_file": "patched_resilient/migrations1.stderr.txt",
+        "stdout_file": "patched_resilient/migrations1.stdout.txt",
+        "success": true,
+        "timed_out": false,
+        "variant": "patched_resilient",
+        "vector_first_fit_rounds": 4,
+        "wall_seconds": 0.365012
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations2.txt",
+          "true",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": 2,
+        "error": null,
+        "instance": "migrations2.txt",
+        "instance_sha256": "00ebc1a2abfb6f1792fb650f8298a94cec071e8e7d6e72ffd262221feddf6450",
+        "known_upstream_failure": false,
+        "resiliency": true,
+        "returncode": 0,
+        "source_modified": true,
+        "status": "passed",
+        "stderr_file": "patched_resilient/migrations2.stderr.txt",
+        "stdout_file": "patched_resilient/migrations2.stdout.txt",
+        "success": true,
+        "timed_out": false,
+        "variant": "patched_resilient",
+        "vector_first_fit_rounds": 2,
+        "wall_seconds": 0.364924
+      },
+      {
+        "accepted_for_pipeline": true,
+        "command": [
+          "python",
+          "Scripts/solution/solve_single.py",
+          "instances/migrations3.txt",
+          "true",
+          "false"
+        ],
+        "current_bottleneck_first_rounds": 8,
+        "error": null,
+        "instance": "migrations3.txt",
+        "instance_sha256": "84e286625cd0fb0f01d84c494b5af385f6e78fbe0eacba635f526ee7bfbcd7d4",
+        "known_upstream_failure": false,
+        "resiliency": true,
+        "returncode": 0,
+        "source_modified": true,
+        "status": "passed",
+        "stderr_file": "patched_resilient/migrations3.stderr.txt",
+        "stdout_file": "patched_resilient/migrations3.stdout.txt",
+        "success": true,
+        "timed_out": false,
+        "variant": "patched_resilient",
+        "vector_first_fit_rounds": 8,
+        "wall_seconds": 0.365068
+      }
+    ],
+    "scope": "Three explicit source/configuration variants; author bundled examples; VFF/CBF rounds only",
+    "status": "passed_with_known_upstream_failure",
+    "variants": [
+      {
+        "membership_consistent": false,
+        "membership_validation_file": "original_resilient/membership.json",
+        "patch_file": null,
+        "resiliency": true,
+        "source_modified": false,
+        "status": "completed_with_known_upstream_failures",
+        "variant": "original_resilient"
+      },
+      {
+        "membership_consistent": true,
+        "membership_validation_file": "original_destination_only/membership.json",
+        "patch_file": null,
+        "resiliency": false,
+        "source_modified": false,
+        "status": "completed_with_known_upstream_failures",
+        "variant": "original_destination_only"
+      },
+      {
+        "membership_consistent": true,
+        "membership_validation_file": "patched_resilient/membership.json",
+        "patch_file": "controller-membership.patch",
+        "resiliency": true,
+        "source_modified": true,
+        "status": "passed",
+        "variant": "patched_resilient"
+      }
+    ]
+  },
+  "mechanism": {
+    "aggregates": [
+      {
+        "mean_compute_ms": 3.630603066672696,
+        "mean_makespan_ticks": 14.1,
+        "mean_weighted_unmet_demand_units": 0,
+        "n": 30,
+        "policy": "loss_rollout",
+        "scenario": "negative_no_demand_change"
+      },
+      {
+        "mean_compute_ms": 3.6593977999965923,
+        "mean_makespan_ticks": 14.1,
+        "mean_weighted_unmet_demand_units": 0,
+        "n": 30,
+        "policy": "makespan_rollout",
+        "scenario": "negative_no_demand_change"
+      },
+      {
+        "mean_compute_ms": 0.26806376665338877,
+        "mean_makespan_ticks": 14.633333333333333,
+        "mean_weighted_unmet_demand_units": 0,
+        "n": 30,
+        "policy": "priority_list",
+        "scenario": "negative_no_demand_change"
+      },
+      {
+        "mean_compute_ms": 0.27645643334229436,
+        "mean_makespan_ticks": 15.133333333333333,
+        "mean_weighted_unmet_demand_units": 0,
+        "n": 30,
+        "policy": "shared_successor_list",
+        "scenario": "negative_no_demand_change"
+      },
+      {
+        "mean_compute_ms": 3.379404933347511,
+        "mean_makespan_ticks": 14.8,
+        "mean_weighted_unmet_demand_units": 48669.03333333333,
+        "n": 30,
+        "policy": "loss_rollout",
+        "scenario": "shared_state"
+      },
+      {
+        "mean_compute_ms": 3.67323393334118,
+        "mean_makespan_ticks": 14.1,
+        "mean_weighted_unmet_demand_units": 50316.3,
+        "n": 30,
+        "policy": "makespan_rollout",
+        "scenario": "shared_state"
+      },
+      {
+        "mean_compute_ms": 12.402516250006101,
+        "mean_makespan_ticks": 10,
+        "mean_weighted_unmet_demand_units": 33522,
+        "n": 4,
+        "policy": "milp_loss_reference",
+        "scenario": "shared_state"
+      },
+      {
+        "mean_compute_ms": 16.599223249983197,
+        "mean_makespan_ticks": 10,
+        "mean_weighted_unmet_demand_units": 36291,
+        "n": 4,
+        "policy": "milp_makespan_reference",
+        "scenario": "shared_state"
+      },
+      {
+        "mean_compute_ms": 0.28509743333794785,
+        "mean_makespan_ticks": 14.633333333333333,
+        "mean_weighted_unmet_demand_units": 50018.6,
+        "n": 30,
+        "policy": "priority_list",
+        "scenario": "shared_state"
+      },
+      {
+        "mean_compute_ms": 0.28363520000690795,
+        "mean_makespan_ticks": 14.933333333333334,
+        "mean_weighted_unmet_demand_units": 48753.03333333333,
+        "n": 30,
+        "policy": "shared_successor_list",
+        "scenario": "shared_state"
+      },
+      {
+        "mean_compute_ms": 6.380858566660663,
+        "mean_makespan_ticks": 13.5,
+        "mean_weighted_unmet_demand_units": 38131.566666666666,
+        "n": 30,
+        "policy": "loss_rollout",
+        "scenario": "unshared_equal_work"
+      },
+      {
+        "mean_compute_ms": 6.423203333342069,
+        "mean_makespan_ticks": 12.766666666666667,
+        "mean_weighted_unmet_demand_units": 40827.73333333333,
+        "n": 30,
+        "policy": "makespan_rollout",
+        "scenario": "unshared_equal_work"
+      },
+      {
+        "mean_compute_ms": 18.733948999994254,
+        "mean_makespan_ticks": 9.75,
+        "mean_weighted_unmet_demand_units": 30551,
+        "n": 4,
+        "policy": "milp_loss_reference",
+        "scenario": "unshared_equal_work"
+      },
+      {
+        "mean_compute_ms": 35.19355749997999,
+        "mean_makespan_ticks": 9.75,
+        "mean_weighted_unmet_demand_units": 35023.5,
+        "n": 4,
+        "policy": "milp_makespan_reference",
+        "scenario": "unshared_equal_work"
+      },
+      {
+        "mean_compute_ms": 0.3412342666782327,
+        "mean_makespan_ticks": 13.666666666666666,
+        "mean_weighted_unmet_demand_units": 40160,
+        "n": 30,
+        "policy": "priority_list",
+        "scenario": "unshared_equal_work"
+      },
+      {
+        "mean_compute_ms": 0.3390852000090187,
+        "mean_makespan_ticks": 13.6,
+        "mean_weighted_unmet_demand_units": 38334.1,
+        "n": 30,
+        "policy": "shared_successor_list",
+        "scenario": "unshared_equal_work"
+      }
+    ],
+    "all_negative_controls_zero": true,
+    "configuration": {
+      "exact_seed_selection": "seed < exact_seeds AND n_flows == 3; both shared/unshared; no negative reference",
+      "exact_seeds": 10,
+      "final_plan_fixed_across_policies": true,
+      "flow_count": "3 + seed % 3",
+      "known_task_durations": true,
+      "loss_unit": "priority-weighted rate-unit*tick",
+      "milp_time_limit_seconds": 8,
+      "old_data_path_preserved": true,
+      "paired_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "rate_unit": "synthetic rate units",
+      "rollout_completion_policy": "shared_successor_list",
+      "shared_unshared_equal_total_preparation_work": true,
+      "time_unit": "uncalibrated simulation ticks",
+      "work_conserving_rollout": true
+    },
+    "exact_loss_gaps": [
+      {
+        "gap_pct": 0,
+        "optimal_loss_units": 50080,
+        "rollout_loss_units": 50080,
+        "scenario": "shared_state",
+        "seed": 0
+      },
+      {
+        "gap_pct": 0,
+        "optimal_loss_units": 47460,
+        "rollout_loss_units": 47460,
+        "scenario": "unshared_equal_work",
+        "seed": 0
+      },
+      {
+        "gap_pct": 0,
+        "optimal_loss_units": 3671,
+        "rollout_loss_units": 3671,
+        "scenario": "shared_state",
+        "seed": 3
+      },
+      {
+        "gap_pct": 0,
+        "optimal_loss_units": 3235,
+        "rollout_loss_units": 3235,
+        "scenario": "unshared_equal_work",
+        "seed": 3
+      },
+      {
+        "gap_pct": 0,
+        "optimal_loss_units": 48936,
+        "rollout_loss_units": 48936,
+        "scenario": "shared_state",
+        "seed": 6
+      },
+      {
+        "gap_pct": 0,
+        "optimal_loss_units": 41146,
+        "rollout_loss_units": 41146,
+        "scenario": "unshared_equal_work",
+        "seed": 6
+      },
+      {
+        "gap_pct": 0,
+        "optimal_loss_units": 31401,
+        "rollout_loss_units": 31401,
+        "scenario": "shared_state",
+        "seed": 9
+      },
+      {
+        "gap_pct": 1.0572077857919249,
+        "optimal_loss_units": 30363,
+        "rollout_loss_units": 30684,
+        "scenario": "unshared_equal_work",
+        "seed": 9
+      }
+    ],
+    "execution": {
+      "numpy": "1.26.4",
+      "platform": "Linux-6.8.0-1070-azure-x86_64-with-glibc2.35",
+      "python": "3.10.22 (main, Oct  1 2026, 14:31:30) [GCC 11.4.0]",
+      "scipy": "1.13.1"
+    },
+    "paired_loss_comparisons": [
+      {
+        "baseline": "priority_list",
+        "bootstrap_95pct_ci_reduction_units": [
+          473.24583333333334,
+          2460.2524999999996
+        ],
+        "mean_paired_reduction_units": 1349.5666666666666,
+        "n": 30,
+        "relative_reduction_of_means_pct": 2.6981296291113037,
+        "scenario": "shared_state",
+        "wins_ties_losses": [
+          16,
+          12,
+          2
+        ]
+      },
+      {
+        "baseline": "shared_successor_list",
+        "bootstrap_95pct_ci_reduction_units": [
+          8.933333333333334,
+          208.24833333333325
+        ],
+        "mean_paired_reduction_units": 84,
+        "n": 30,
+        "relative_reduction_of_means_pct": 0.17229697160723675,
+        "scenario": "shared_state",
+        "wins_ties_losses": [
+          5,
+          25,
+          0
+        ]
+      },
+      {
+        "baseline": "makespan_rollout",
+        "bootstrap_95pct_ci_reduction_units": [
+          563.8708333333333,
+          3045.4283333333333
+        ],
+        "mean_paired_reduction_units": 1647.2666666666667,
+        "n": 30,
+        "relative_reduction_of_means_pct": 3.2738231282241865,
+        "scenario": "shared_state",
+        "wins_ties_losses": [
+          12,
+          18,
+          0
+        ]
+      },
+      {
+        "baseline": "priority_list",
+        "bootstrap_95pct_ci_reduction_units": [
+          1062.8416666666665,
+          3245.9258333333305
+        ],
+        "mean_paired_reduction_units": 2028.4333333333334,
+        "n": 30,
+        "relative_reduction_of_means_pct": 5.0508798140770255,
+        "scenario": "unshared_equal_work",
+        "wins_ties_losses": [
+          23,
+          6,
+          1
+        ]
+      },
+      {
+        "baseline": "shared_successor_list",
+        "bootstrap_95pct_ci_reduction_units": [
+          55.06666666666667,
+          391.1091666666666
+        ],
+        "mean_paired_reduction_units": 202.53333333333333,
+        "n": 30,
+        "relative_reduction_of_means_pct": 0.5283372593417697,
+        "scenario": "unshared_equal_work",
+        "wins_ties_losses": [
+          7,
+          23,
+          0
+        ]
+      },
+      {
+        "baseline": "makespan_rollout",
+        "bootstrap_95pct_ci_reduction_units": [
+          1136.4533333333331,
+          4623.2725
+        ],
+        "mean_paired_reduction_units": 2696.1666666666665,
+        "n": 30,
+        "relative_reduction_of_means_pct": 6.603762801755669,
+        "scenario": "unshared_equal_work",
+        "wins_ties_losses": [
+          13,
+          17,
+          0
+        ]
+      }
+    ],
+    "total_violations": {
+      "final_rate_violations": 0,
+      "precedence_violations": 0,
+      "resource_violations": 0,
+      "structure_violations": 0
+    },
+    "version": "phase-b-fluid-dag-1.1"
+  },
+  "artifacts": [
+    {
+      "id": 13300864894,
+      "name": "controller-recovery-41786900624-1",
+      "size_in_bytes": 58762,
+      "expired": false,
+      "expires_at": "2026-11-11T06:39:14Z",
+      "html_url": "https://github.com/lxy1621415703/blink/actions/runs/41786900624/artifacts/13300864894"
+    }
+  ],
+  "collected_from": "Decoded GitHub Actions job logs plus authenticated run/artifact metadata",
+  "limitations": [
+    "Phase B is a synthetic 3-5-flow constant-deficit task-DAG simulation with pre-reserved feasible paths and known uncalibrated task durations.",
+    "Phase B does not reproduce Ares/QUEST, perform packet-level measurements, or run Mininet.",
+    "Phase A keeps unmodified upstream failures and the separately repaired configuration distinct."
+  ],
+  "interpretation": {
+    "shared_state_compute_ratio_to_strong": 11.91461755545576
+  }
+}
