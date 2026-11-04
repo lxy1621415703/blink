@@ -1,13 +1,15 @@
-"""Run the pinned authors' migration-scheduling CLI without editing its code.
+"""Compare pinned author CLI configurations and a separately recorded one-line fix.
 
 This phase reports the authors' VFF/CBF round counts on their four bundled
 instances. It does not represent controller-failure or packet-level experiments.
-Only public source is cloned at runtime; upstream source is not an output artifact.
+The pristine checkout is never modified. A temporary copy receives only the
+resilient controller-membership fix. Source is not an output artifact.
 """
 
 from __future__ import annotations
 
 import argparse
+import difflib
 import hashlib
 import importlib.metadata
 import json
@@ -15,6 +17,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -26,12 +29,57 @@ COMMIT = "3f6cd3b6d3aca1ff38c3b985535d31bc7698fc05"
 AUTHOR_SEED = 42
 HASH_SEED = 0
 INSTANCES = tuple(f"migrations{i}.txt" for i in range(4))
+PATCH_FILE = "MigrationScheduling/utils.py"
+PATCH_OLD = b"control_const.get_constraint_switches(False)"
+PATCH_NEW = b"control_const.get_constraint_switches(resiliency)"
+VARIANTS = (
+    ("original_resilient", False, True),
+    ("original_destination_only", False, False),
+    ("patched_resilient", True, True),
+)
 METRICS = {
     "vector_first_fit_rounds": r"Number of Rounds for Vector First Fit:\s*(\d+)",
     "current_bottleneck_first_rounds": (
         r"Number of Rounds for Current Bottleneck First:\s*(\d+)"
     ),
 }
+
+# This subprocess imports the selected source tree but does not run heuristics
+# or an optimizer. Expected membership is independently derived below.
+MEMBERSHIP_PROBE = '''
+import json
+import sys
+from MigrationScheduling.Model import Parser
+from MigrationScheduling import utils
+
+resiliency = sys.argv[1] == "true"
+records = []
+for filename in sys.argv[2:]:
+    parser = Parser()
+    parser.parse_migrations(filename)
+    data = parser.to_data()
+    constraints = utils.get_constraints_dict(data, resiliency)
+    controllers = []
+    for constraint in data.get_control_consts():
+        name = constraint.get_controller()
+        observed = constraints[name]
+        controllers.append({
+            "controller": name,
+            "observed_switches": sorted(observed.get_switches()),
+            "observed_load": observed.get_load(),
+        })
+    records.append({
+        "instance": filename.rsplit("/", 1)[-1],
+        "migrations": [{
+            "switch": migration.get_switch(),
+            "source": migration.get_src_controller(),
+            "destination": migration.get_dst_controller(),
+            "load": migration.get_load(),
+        } for migration in data.get_migrations().values()],
+        "controllers": sorted(controllers, key=lambda value: value["controller"]),
+    })
+print(json.dumps(records, sort_keys=True))
+'''
 
 
 def write_json(path: Path, value: object) -> None:
@@ -126,6 +174,120 @@ def prepare_upstream(upstream: Path, output: Path) -> dict:
     }
 
 
+def patch_controller_membership(original: bytes) -> tuple[bytes, dict]:
+    """Apply exactly the documented fix, rejecting missing/ambiguous targets."""
+    if original.count(PATCH_OLD) != 1 or PATCH_NEW in original:
+        raise ValueError("Expected exactly one pristine controller-membership expression")
+    patched = original.replace(PATCH_OLD, PATCH_NEW, 1)
+    difference = "".join(difflib.unified_diff(
+        original.decode("utf-8").splitlines(keepends=True),
+        patched.decode("utf-8").splitlines(keepends=True),
+        fromfile=f"original/{PATCH_FILE}", tofile=f"patched/{PATCH_FILE}",
+    ))
+    return patched, {
+        "file": PATCH_FILE,
+        "replacement_count": 1,
+        "original_sha256": hashlib.sha256(original).hexdigest(),
+        "patched_sha256": hashlib.sha256(patched).hexdigest(),
+        "unified_diff": difference,
+    }
+
+
+def prepare_patched_copy(upstream: Path, patched: Path) -> dict:
+    """Keep a separate runtime copy; verify the sole changed tracked file."""
+    if patched == upstream or upstream in patched.parents or patched in upstream.parents:
+        raise RuntimeError("Patched and pristine source locations must be separate")
+    expected_bytes, patch = patch_controller_membership((upstream / PATCH_FILE).read_bytes())
+    if not patched.exists():
+        shutil.copytree(
+            upstream, patched,
+            ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc"),
+        )
+        (patched / PATCH_FILE).write_bytes(expected_bytes)
+    tracked_files = [name for name in git_output(upstream, "ls-files", "-z").split("\0") if name]
+    differences = []
+    for name in tracked_files:
+        source = upstream / name
+        target = patched / name
+        if not target.is_file():
+            raise RuntimeError(f"Patched runtime copy is missing {name}")
+        if source.read_bytes() != target.read_bytes():
+            differences.append(name)
+    if differences != [PATCH_FILE] or (patched / PATCH_FILE).read_bytes() != expected_bytes:
+        raise RuntimeError(f"Patched copy has unexpected tracked differences: {differences}")
+    patch["changed_tracked_files"] = differences
+    patch["pristine_source_modified"] = False
+    return patch
+
+
+def validate_membership_records(records: list[dict], resiliency: bool) -> dict:
+    """Derive expected source/destination membership directly from migrations."""
+    instances = []
+    for record in records:
+        differences = []
+        for controller in record["controllers"]:
+            name = controller["controller"]
+            expected_migrations = [
+                migration for migration in record["migrations"]
+                if migration["destination"] == name
+                or (resiliency and migration["source"] == name)
+            ]
+            expected = {migration["switch"] for migration in expected_migrations}
+            observed = set(controller["observed_switches"])
+            expected_load = sum(migration["load"] for migration in expected_migrations)
+            if expected != observed or abs(expected_load - controller["observed_load"]) > 1e-8:
+                differences.append({
+                    "controller": name,
+                    "expected_switches": sorted(expected),
+                    "observed_switches": sorted(observed),
+                    "missing_switches": sorted(expected - observed),
+                    "extra_switches": sorted(observed - expected),
+                    "expected_load": expected_load,
+                    "observed_load": controller["observed_load"],
+                })
+        instances.append({
+            "instance": record["instance"],
+            "consistent": not differences,
+            "differences": differences,
+        })
+    return {"resiliency": resiliency, "consistent": all(x["consistent"] for x in instances),
+            "instances": instances}
+
+
+def run_membership_validation(source: Path, names: list[str], output: Path,
+                              env: dict[str, str], resiliency: bool,
+                              timeout: float) -> dict:
+    command = [sys.executable, "-c", MEMBERSHIP_PROBE,
+               str(resiliency).lower(), *[f"instances/{name}" for name in names]]
+    execution = run_logged(command, source, output, "membership", timeout=timeout, env=env)
+    if execution["returncode"] != 0:
+        raise RuntimeError(f"Membership probe failed; see {output.name}/membership.stderr.txt")
+    records = json.loads((output / execution["stdout_file"]).read_text(encoding="utf-8"))
+    result = {**validate_membership_records(records, resiliency), "execution": execution}
+    write_json(output / "membership.json", result)
+    return result
+
+
+def is_known_source_membership_failure(record: dict, stderr: str, validation: dict) -> bool:
+    """Only whitelist the demonstrated source-membership failure, not any error."""
+    if (record["returncode"] in (None, 0) or record["timed_out"] or record["error"]
+            or record.get("vector_first_fit_rounds") is None
+            or record.get("current_bottleneck_first_rounds") is not None
+            or validation["consistent"]
+            or "remove_migration_from_controller" not in stderr
+            or "remove_migration_from_constraints" not in stderr):
+        return False
+    missing_switches = {switch for difference in validation["differences"]
+                        for switch in difference["missing_switches"]}
+    source_controllers = {difference["controller"] for difference in validation["differences"]
+                          if difference["missing_switches"]}
+    switch_match = re.search(
+        r"(?:MigrationScheduling\.exceptions\.)?SwitchNotFound: Switch (s\d+) not found\.", stderr)
+    key_match = re.search(r"(?:^|\n)KeyError: ['\"](c\d+)['\"](?:\n|$)", stderr)
+    return bool((switch_match and switch_match.group(1) in missing_switches)
+                or (key_match and key_match.group(1) in source_controllers))
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
@@ -139,18 +301,19 @@ def main() -> int:
         parser.error("--timeout must be positive")
     output = args.output.resolve()
     upstream = args.upstream_dir.resolve()
+    patched_upstream = upstream.parent / "patched-upstream"
     output.mkdir(parents=True, exist_ok=True)
     summary = {
         "phase": "A_author_heuristics",
         "status": "running",
         "repository": REPOSITORY,
         "commit": COMMIT,
-        "scope": "Unmodified author CLI; bundled examples; VFF and CBF round counts only",
+        "scope": "Three explicit source/configuration variants; author bundled examples; VFF/CBF rounds only",
         "optimizer_requested": False,
         "gurobi_license_required_for_this_path": False,
         "author_rng_seed": AUTHOR_SEED,
         "python_hash_seed": HASH_SEED,
-        "resiliency_argument": True,
+        "variants": [],
         "compatibility_environment": {
             "description": "Python 3.10 compatibility dependencies, not the authors' original environment",
             "python": platform.python_version(),
@@ -164,15 +327,18 @@ def main() -> int:
     try:
         provenance = prepare_upstream(upstream, output)
         provenance.update({
-            "author_cli": "python Scripts/solution/solve_single.py <instance> true false",
+            "author_cli": "python Scripts/solution/solve_single.py <instance> <resiliency> false",
             "seed_source": "solve_single.py calls utils.initialize_seeds(specs.SEED_NUM), with SEED_NUM=42",
-            "source_changes": [],
+            "pristine_source_changes": [],
         })
+        patch = prepare_patched_copy(upstream, patched_upstream)
+        provenance["separate_patched_runtime_copy"] = patch
+        write_json(output / "patch.json", patch)
+        (output / "controller-membership.patch").write_text(patch["unified_diff"], encoding="utf-8")
         write_json(output / "provenance.json", provenance)
         env = os.environ.copy()
         env.update({
             "PYTHONHASHSEED": str(HASH_SEED),
-            "PYTHONPATH": str(upstream),
             "PYTHONDONTWRITEBYTECODE": "1",
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
@@ -180,40 +346,83 @@ def main() -> int:
             "OPENBLAS_NUM_THREADS": "1",
             "MKL_NUM_THREADS": "1",
         })
-        for name in args.instances:
-            instance = upstream / "instances" / name
-            if not instance.is_file():
-                raise RuntimeError(f"Bundled instance is missing: {name}")
-            stem = instance.stem
-            command = [sys.executable, "Scripts/solution/solve_single.py", f"instances/{name}", "true", "false"]
-            record = {
-                "instance": name,
-                "instance_sha256": hashlib.sha256(instance.read_bytes()).hexdigest(),
-                "command": ["python", *command[1:]],
-                **run_logged(command, upstream, output, stem, timeout=args.timeout, env=env),
+        for variant, source_modified, resiliency in VARIANTS:
+            source = patched_upstream if source_modified else upstream
+            variant_output = output / variant
+            variant_env = {**env, "PYTHONPATH": str(source)}
+            validation = run_membership_validation(
+                source, args.instances, variant_output, variant_env, resiliency, args.timeout)
+            validation_by_name = {value["instance"]: value for value in validation["instances"]}
+            variant_record = {
+                "variant": variant, "source_modified": source_modified,
+                "resiliency": resiliency, "status": "running",
+                "membership_consistent": validation["consistent"],
+                "membership_validation_file": f"{variant}/membership.json",
+                "patch_file": "controller-membership.patch" if source_modified else None,
             }
-            stdout = (output / record["stdout_file"]).read_text(encoding="utf-8")
-            for metric, pattern in METRICS.items():
-                match = re.search(pattern, stdout)
-                record[metric] = int(match.group(1)) if match else None
-            record["success"] = (
-                record["returncode"] == 0
-                and all(record.get(metric) is not None for metric in METRICS)
-            )
-            summary["runs"].append(record)
-            write_json(output / f"{stem}.json", record)
-            write_json(output / "summary.json", summary)
-            print("AUTHOR_RESULT_JSON=" + json.dumps(record, sort_keys=True), flush=True)
-            if not record["success"]:
-                stderr_text = (output / record["stderr_file"]).read_text(encoding="utf-8")
-                print(f"AUTHOR_STDERR_BEGIN={name}", flush=True)
-                print(stderr_text, flush=True)
-                print(f"AUTHOR_STDERR_END={name}", flush=True)
+            summary["variants"].append(variant_record)
+            for name in args.instances:
+                instance = source / "instances" / name
+                if not instance.is_file():
+                    raise RuntimeError(f"Bundled instance is missing: {name}")
+                stem = instance.stem
+                command = [sys.executable, "Scripts/solution/solve_single.py", f"instances/{name}",
+                           str(resiliency).lower(), "false"]
+                record = {
+                    "variant": variant, "source_modified": source_modified,
+                    "resiliency": resiliency, "instance": name,
+                    "instance_sha256": hashlib.sha256(instance.read_bytes()).hexdigest(),
+                    "command": ["python", *command[1:]],
+                    **run_logged(command, source, variant_output, stem,
+                                 timeout=args.timeout, env=variant_env),
+                }
+                stdout = (variant_output / record["stdout_file"]).read_text(encoding="utf-8")
+                stderr_text = (variant_output / record["stderr_file"]).read_text(encoding="utf-8")
+                for metric, pattern in METRICS.items():
+                    match = re.search(pattern, stdout)
+                    record[metric] = int(match.group(1)) if match else None
+                record["success"] = (record["returncode"] == 0 and all(
+                    record.get(metric) is not None for metric in METRICS))
+                record["status"] = "passed" if record["success"] else "failed"
+                record["known_upstream_failure"] = (
+                    variant == "original_resilient" and is_known_source_membership_failure(
+                        record, stderr_text, validation_by_name[name]))
+                record["accepted_for_pipeline"] = (
+                    (record["success"] and validation_by_name[name]["consistent"])
+                    or record["known_upstream_failure"])
+                record["stdout_file"] = f"{variant}/{record['stdout_file']}"
+                record["stderr_file"] = f"{variant}/{record['stderr_file']}"
+                summary["runs"].append(record)
+                write_json(variant_output / f"{stem}.json", record)
+                write_json(output / "summary.json", summary)
+                print("AUTHOR_RESULT_JSON=" + json.dumps(record, sort_keys=True), flush=True)
+                if not record["success"]:
+                    print(f"AUTHOR_STDERR_BEGIN={variant}/{name}", flush=True)
+                    print(stderr_text, flush=True)
+                    print(f"AUTHOR_STDERR_END={variant}/{name}", flush=True)
+            runs = [value for value in summary["runs"] if value["variant"] == variant]
+            if all(value["success"] for value in runs) and validation["consistent"]:
+                variant_record["status"] = "passed"
+            elif all(value["known_upstream_failure"] for value in runs):
+                variant_record["status"] = "failed_known_upstream_bug"
+            else:
+                variant_record["status"] = "failed"
         source_status = git_output(upstream, "status", "--porcelain", "--untracked-files=no")
         if source_status:
             raise RuntimeError("Upstream tracked source changed during author CLI execution")
-        summary["status"] = "passed" if all(run["success"] for run in summary["runs"]) else "failed"
-        code = 0 if summary["status"] == "passed" else 1
+        if prepare_patched_copy(upstream, patched_upstream) != patch:
+            raise RuntimeError("Patched runtime source changed during execution")
+        required_variants = [value for value in summary["variants"]
+                             if value["variant"] != "original_resilient"]
+        summary["pipeline_success"] = (
+            all(value["status"] == "passed" for value in required_variants)
+            and all(value["accepted_for_pipeline"] for value in summary["runs"]))
+        known_failures = sum(value["known_upstream_failure"] for value in summary["runs"])
+        summary["known_upstream_failure_count"] = known_failures
+        summary["status"] = (
+            ("passed_with_known_upstream_failure" if known_failures else "passed")
+            if summary["pipeline_success"] else "failed")
+        code = 0 if summary["pipeline_success"] else 1
     except Exception as error:
         summary["status"] = "failed"
         summary["error"] = f"{type(error).__name__}: {error}"
