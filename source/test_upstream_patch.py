@@ -5,7 +5,7 @@ import hashlib
 import unittest
 
 from run_upstream import (
-    PATCH_NEW, PATCH_OLD, is_known_source_membership_failure,
+    PATCH_NEW, PATCH_OLD, is_known_source_membership_failure, is_known_empty_constraint_failure,
     patch_controller_membership, validate_membership_records,
 )
 
@@ -22,6 +22,20 @@ def fixture():
 
 
 class UpstreamPatchTests(unittest.TestCase):
+    def test_empty_constraint_failure_requires_independent_evidence(self):
+        records = fixture()
+        records[0]["controllers"][0]["observed_load"] = 0.0
+        validation = validate_membership_records(records, False)["instances"][0]
+        record = {"returncode": 1, "timed_out": False, "error": None,
+                  "vector_first_fit_rounds": 1, "current_bottleneck_first_rounds": None}
+        stderr = ("in current_bottleneck_first\nin find_scheduling_round\n"
+                  "AttributeError: 'NoneType' object has no attribute 'get_dst_controller'\n")
+        self.assertEqual(validation["empty_controllers"], ["c0"])
+        self.assertTrue(is_known_empty_constraint_failure(record, stderr, validation))
+        self.assertFalse(is_known_empty_constraint_failure(
+            record, stderr, {**validation, "empty_controllers": []}))
+        self.assertFalse(is_known_empty_constraint_failure(record, "unrelated error", validation))
+
     def test_patch_changes_only_the_target_and_records_hashes(self):
         original = b"# public fixture\nreturn " + PATCH_OLD + b"\n# preserved\n"
         patched, evidence = patch_controller_membership(original)
