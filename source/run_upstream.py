@@ -225,6 +225,7 @@ def validate_membership_records(records: list[dict], resiliency: bool) -> dict:
     instances = []
     for record in records:
         differences = []
+        empty_controllers = []
         for controller in record["controllers"]:
             name = controller["controller"]
             expected_migrations = [
@@ -235,6 +236,8 @@ def validate_membership_records(records: list[dict], resiliency: bool) -> dict:
             expected = {migration["switch"] for migration in expected_migrations}
             observed = set(controller["observed_switches"])
             expected_load = sum(migration["load"] for migration in expected_migrations)
+            if not expected and not observed and abs(controller["observed_load"]) < 1e-8:
+                empty_controllers.append(name)
             if expected != observed or abs(expected_load - controller["observed_load"]) > 1e-8:
                 differences.append({
                     "controller": name,
@@ -249,6 +252,7 @@ def validate_membership_records(records: list[dict], resiliency: bool) -> dict:
             "instance": record["instance"],
             "consistent": not differences,
             "differences": differences,
+            "empty_controllers": empty_controllers,
         })
     return {"resiliency": resiliency, "consistent": all(x["consistent"] for x in instances),
             "instances": instances}
@@ -286,6 +290,18 @@ def is_known_source_membership_failure(record: dict, stderr: str, validation: di
     key_match = re.search(r"(?:^|\n)KeyError: ['\"](c\d+)['\"](?:\n|$)", stderr)
     return bool((switch_match and switch_match.group(1) in missing_switches)
                 or (key_match and key_match.group(1) in source_controllers))
+
+
+def is_known_empty_constraint_failure(record: dict, stderr: str, validation: dict) -> bool:
+    """Recognize the independently evidenced zero-membership CBF failure."""
+    return bool(
+        record["returncode"] not in (None, 0) and not record["timed_out"]
+        and not record["error"] and record.get("vector_first_fit_rounds") is not None
+        and record.get("current_bottleneck_first_rounds") is None
+        and validation["consistent"] and validation.get("empty_controllers")
+        and "current_bottleneck_first" in stderr and "find_scheduling_round" in stderr
+        and "AttributeError: 'NoneType' object has no attribute 'get_dst_controller'" in stderr
+    )
 
 
 def main() -> int:
@@ -385,8 +401,10 @@ def main() -> int:
                     record.get(metric) is not None for metric in METRICS))
                 record["status"] = "passed" if record["success"] else "failed"
                 record["known_upstream_failure"] = (
-                    variant == "original_resilient" and is_known_source_membership_failure(
+                    (variant == "original_resilient" and is_known_source_membership_failure(
                         record, stderr_text, validation_by_name[name]))
+                    or (variant == "original_destination_only" and is_known_empty_constraint_failure(
+                        record, stderr_text, validation_by_name[name])))
                 record["accepted_for_pipeline"] = (
                     (record["success"] and validation_by_name[name]["consistent"])
                     or record["known_upstream_failure"])
@@ -403,8 +421,8 @@ def main() -> int:
             runs = [value for value in summary["runs"] if value["variant"] == variant]
             if all(value["success"] for value in runs) and validation["consistent"]:
                 variant_record["status"] = "passed"
-            elif all(value["known_upstream_failure"] for value in runs):
-                variant_record["status"] = "failed_known_upstream_bug"
+            elif all(value["accepted_for_pipeline"] for value in runs):
+                variant_record["status"] = "completed_with_known_upstream_failures"
             else:
                 variant_record["status"] = "failed"
         source_status = git_output(upstream, "status", "--porcelain", "--untracked-files=no")
@@ -413,7 +431,7 @@ def main() -> int:
         if prepare_patched_copy(upstream, patched_upstream) != patch:
             raise RuntimeError("Patched runtime source changed during execution")
         required_variants = [value for value in summary["variants"]
-                             if value["variant"] != "original_resilient"]
+                             if value["source_modified"]]
         summary["pipeline_success"] = (
             all(value["status"] == "passed" for value in required_variants)
             and all(value["accepted_for_pipeline"] for value in summary["runs"]))
