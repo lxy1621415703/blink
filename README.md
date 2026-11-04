@@ -16,6 +16,8 @@ These runs measure the original migration heuristic's scheduling outputs and run
 
 Three variants are recorded separately: the unmodified destination-only mode; the unmodified source-and-destination (`resiliency=true`) mode; and a separately labelled one-line bugfix of the latter. In the selected upstream revision, `get_constraint_dict_for_controller` calculates source-and-destination load but hardcodes `get_constraint_switches(False)`. The original resilient CBF path consequently raises `SwitchNotFound` while removing a source migration. The bugfix forwards the existing `resiliency` argument to that call in a separate temporary copy. The pristine checkout remains unchanged. Original failures remain in the result artifacts; a successful repaired run is not labelled an unmodified author-code success.
 
+The unmodified destination-only mode also fails on `migrations1.txt`: an initially empty controller constraint remains in the CBF dictionary after real tasks finish, so it selects no migration and dereferences `None`. A separate membership/load check establishes that empty constraint before this known failure is accepted as an experimental outcome. Original failed rows remain failed. The workflow succeeds only when all rows are either successful or match independently evidenced upstream defects, and the repaired resilient configuration passes every supplied instance. Unexpected failures still fail the workflow.
+
 ## B. New recovery-mechanism experiment
 
 Question: with identical final recovery assignments, action dependencies, and resource budgets, can a loss-aware schedule reduce cumulative unmet demand compared with simpler schedules?
