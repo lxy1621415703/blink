@@ -41,7 +41,7 @@ jobs:
         id: tests
         run: python -m unittest discover -s source -p "test_*.py" -v
 
-      - name: Run unmodified author heuristics
+      - name: Evaluate original and repaired author heuristics
         id: upstream
         if: ${{ always() && steps.dependencies.outcome == 'success' }}
         run: python source/run_upstream.py --output results/upstream
