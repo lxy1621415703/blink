@@ -1,0 +1,67 @@
+{
+  "version": "executable-closure-protocol-1.0",
+  "frozen_before_holdout_execution": true,
+  "scope": "Self-implemented old/new forwarding-rule difference and state/ownership dependency-closure mechanism simulation; not a reproduction of Ares, QUEST, Ravana or a packet/network testbed",
+  "development_seeds": [3000, 3010],
+  "holdout_seeds": [4000, 4030],
+  "flow_count": 8,
+  "profiles": ["mixed", "fully_coupled", "hot_standby", "no_overlap", "unchanged"],
+  "scale_seeds": [5000, 5005],
+  "scale_flow_counts": [20, 50, 100],
+  "scale_profiles": ["mixed"],
+  "modes": ["full_domain", "diff_full_state", "closure"],
+  "list_policy": "shared_successor_list",
+  "quality_reference": {
+    "policy": "closure_rollout",
+    "mode": "closure",
+    "objective": "loss",
+    "development_seeds": [3000, 3001, 3002],
+    "holdout_seeds": [4000, 4001, 4002],
+    "maximum_flows": 8,
+    "scale_enabled": false
+  },
+  "timing": {
+    "clock": "perf_counter_ns",
+    "cold_calls": 1,
+    "cold_call_definition": "first invocation per instance and policy in an already imported process; not process cold start",
+    "warmup_calls": 3,
+    "measured_repetitions": 9,
+    "policy_order": "rotate by seed plus round index",
+    "included": ["build_plan", "compile_instance inside run_list or run_rollout", "schedule construction"],
+    "excluded": ["common raw scenario generation", "validation", "serialization", "metric aggregation"],
+    "cross_call_compilation_cache": false,
+    "cpu_threads": 1
+  },
+  "bootstrap_seed": 20261104,
+  "bootstrap_resamples": 2000,
+  "comparison_unit": "paired scenario seed, separately by split/profile/flow_count; timing repetitions are not independent experimental units",
+  "time_unit": "uncalibrated simulation tick",
+  "compute_unit": "measured millisecond; never added to simulation ticks",
+  "loss_unit": "priority-weighted synthetic deficit-rate-unit times tick",
+  "business_metric_definitions": {
+    "first_activation_ticks": "earliest completed activation of a positive priority-weighted deficit flow; not the first scheduled task or first dispatch",
+    "weighted_t90_ticks": "earliest activation completion by which 90 percent of initial priority-weighted positive deficit has recovered",
+    "qos_all_ticks": "latest positive-deficit activation completion, excluding unrelated background work",
+    "work_makespan_ticks": "completion of every scheduled task, including background recovery"
+  },
+  "state_units": {
+    "state_bytes": "actual cold objects' synthetic logical payload bytes, not measured serialization size",
+    "state_objects": "actual cold-loaded target/state objects; valid warm snapshots excluded",
+    "required_state_objects": "intrinsic target/state dependency closure including valid warm and bootstrap objects",
+    "closure_state_fraction": "required non-bootstrap application objects divided by a common full-domain target/application manifest",
+    "participating_closure_state_fraction": "required non-bootstrap application objects divided by actual write-target application manifest; fully_coupled equals one"
+  },
+  "controls": {
+    "raw_scenario_shared_across_modes": true,
+    "old_new_paths_and_final_service_identical": true,
+    "resources_backup_and_warm_state_identical": true,
+    "full_domain_no_artificial_global_owner_barrier": true,
+    "full_state_is_self_implemented_scope_ablation": true,
+    "unchanged_requires_no_business_recovery_actions_and_zero_business_loss_time": true,
+    "fully_coupled_only_predicts_state_savings_disappear": true,
+    "negative_profiles_not_pooled_with_mixed_main_mean": true,
+    "holdout_used_for_tuning": false
+  },
+  "validity_gate": "Every independently audited rule/state/version/owner/activation/forwarding and task resource/dependency violation count is zero; any violation fails the run",
+  "performance_claims": "Report measured paired effects including regressions; no forced success threshold and no claim of deployed or calibrated recovery latency"
+}
