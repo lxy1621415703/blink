@@ -1,6 +1,6 @@
 # Controller recovery scheduling experiments
 
-This repository runs two explicitly separate experiments on GitHub Actions.
+This repository separates author-code reproduction, scheduling experiments, and a new executable-recovery-closure model on GitHub Actions.
 
 ## A. Public author-code reproduction
 
@@ -71,3 +71,45 @@ The incremental engine and fixed lightweight policy set were evaluated with `spe
 At 100 groups, the equivalent shared-successor implementation reduced planner time from 52.149 ms to 8.789 ms on five shared-state cases. These are task-DAG scale measurements, not a 100-node WAN or packet-level testbed. The current evidence supports implementation acceleration, not a claim of materially shorter real-network recovery.
 
 [Persistent speed/quality summary](reports/fast-summary.json) · [Raw timings, instances and schedules](https://github.com/lxy1621415703/blink/actions/runs/41788972979/artifacts/13302542910).
+
+## Executable recovery closure
+
+The new question is which recovery operations a particular QoS repair actually requires. Earlier phases gave every scheduler the same fixed recovery DAG. This phase derives that DAG from old and target forwarding paths, installed rule identities, surviving state replicas, state-version dependencies, and switch ownership. It preserves the earlier code and results as separate experiments.
+
+### Mechanism and objective
+
+1. Keep the old forwarding path running after the controller crash. A specified demand increase creates a service deficit; the controller crash does not itself erase forwarding rules.
+2. Compare each target path with installed rules. Reuse a rule only when its forwarding action and required semantic version are still valid. An ownership change alone does not invalidate a forwarding rule.
+3. For each necessary write, require a live authorized controller, the current fenced ownership epoch, and the transitive application-state dependencies of that write. Reuse valid hot state and fetch missing or stale state from a surviving replica. Shared prerequisites execute once per target controller.
+4. Stage changed downstream rules in a target-version context before the ingress activates that context. Preserve the old context while it carries traffic. Common unchanged entries are assumed usable in both contexts; staging space is assumed sufficient. Each flow waits for its own prerequisites; the full-domain comparison has no artificial all-domain ownership barrier.
+5. Schedule the selected operations with the same event-driven resource-constrained scheduler used by the scope comparisons. Background restoration of unrelated programmability can proceed separately after the current QoS repair.
+
+For the flows with a positive service deficit, let `Delta_f` be the required writes and `Anc(Delta_f)` their state, ownership, and installation dependencies. The selected foreground work is the union of these dependency closures after removing already valid prerequisites. This is the least predecessor-closed set for the supplied dependency graph; it is not a claim of globally optimal path, backup-controller, or application-state placement.
+
+The scheduling objective is `sum_f weight_f * max(demand_f - old_service_f, 0) * activation_completion_f`. This is cumulative weighted unmet demand in synthetic rate-unit ticks. The implemented list heuristic approximates this objective. A small-instance rollout on the same closure is a separate quality reference. Target paths and backup-controller assignments are fixed and identical across comparisons.
+
+State dependencies are supplied by the synthetic application manifest. They are not automatically inferred from a real controller. An application with a global routing-state dependency can require the entire state bundle; the fully coupled control represents this case. A deployment would need to establish these dependencies from the actual application's state accesses and consistency contract before omitting any state.
+
+### Sources and transferred ideas
+
+- [Ares](https://doi.org/10.1109/JSAC.2025.3528814) and [QUEST](https://doi.org/10.1109/TON.2026.3673992) motivate relating controller recovery to the actual traffic/QoS repair. Their full algorithms are not implemented here.
+- [Ravana, SOSR 2015](https://nkatta.github.io/papers/ravana15.pdf) motivates considering controller and switch state together. This model represents version/ownership prerequisites; it does not implement or claim Ravana's transactional exactly-once protocol.
+- [ez-Segway, SOSR 2017](https://sands.kaust.edu.sa/papers/ez-segway.sosr17.pdf) motivates deriving update work from the existing forwarding configuration and requiring a safe update order. This experiment uses pre-reserved target capacity and an ingress-last abstraction, rather than ez-Segway's distributed switch protocol.
+- [OnlineTE](https://www.microsoft.com/en-us/research/publication/near-optimal-online-traffic-engineering/) and [SSDO](https://www.usenix.org/conference/nsdi26/presentation/mao) motivate retaining useful existing work and avoiding repeated full optimization. This phase reuses valid rules/state and the incremental scheduler. Continuous TE convergence guarantees do not transfer to this discrete model; a live anytime replanner is not implemented.
+
+### Fair scope comparisons
+
+All variants receive the same raw scenario, valid hot state, surviving replicas, old/target routes, fixed backup mappings, and resource budgets. They all reuse matching rules. These are newly implemented mechanism ablations, not executions of the cited papers.
+
+- `full_domain`: recover ownership for the failed controller's whole domain and prepare the full application state at the designated targets, while allowing an individual flow to activate once its actual dependencies are ready.
+- `diff_full_state`: recover only the ownership needed by changed rules, but also prepare the full application state at participating targets.
+- `closure`: recover only the ownership and transitive state dependencies needed by the current rule changes and ingress activation.
+- `closure_rollout`: use the identical closure with the more expensive loss-rollout scheduler on small instances, separating scope selection from scheduling quality.
+
+### Evidence and units
+
+`closure_protocol.json` specifies fresh development, holdout, and scale seeds before evaluation. The benchmark records full build-and-schedule computation time, required state objects and logical transfer bytes, ownership and rule operations, first useful activation, weighted T90, time until all deficient flows recover, and completion of all scheduled work. Background work completion is distinct from business recovery. Independent validation reconstructs the target forwarding and checks state versions, ownership, and activation readiness from the raw scenario.
+
+The controls include fully coupled state, full hot standby, no old/new route overlap, and unchanged demand. Full hot standby must have zero state-transfer work; fully coupled state can remove state-slicing savings; unchanged demand has zero business deficit and requires no foreground QoS repair. No improvement is assumed for these controls.
+
+This is an executable mechanism simulation on synthetic topologies and paths, with explicitly reserved final capacity. Durations remain uncalibrated simulation ticks; planner measurements are wall-clock milliseconds. The two cannot be added to report end-to-end milliseconds. State bytes and rule counts are modeled operations, not observed transfer traffic or FlowMod measurements. No actual controller failover, quorum/fencing protocol, packet queues, in-flight packet consistency, or shared-link congestion is executed.
