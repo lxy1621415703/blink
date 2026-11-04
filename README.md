@@ -7,12 +7,14 @@ This repository runs two explicitly separate experiments on GitHub Actions.
 - Upstream: https://github.com/nu-lab/Controller-Load-Migration-Scheduling
 - Revision: `3f6cd3b6d3aca1ff38c3b985535d31bc7698fc05`
 - Paper: *Switch Migration Scheduling in Distributed SDN Controllers*, NetSoft 2022. This is a later work related to the two-page migration-scheduling poster in the supplied reference collection; the versions are not interchangeable.
-- Run the upstream heuristic CLI on its own supplied instances, without editing its algorithm. Record the command, source revision, environment, exit status, and raw output.
+- Run the upstream heuristic CLI on its own supplied instances. Record the command, source revision, environment, exit status, and raw output for every variant.
 - Install the Gurobi Python package because the upstream package imports it eagerly. The heuristic run disables the optimizer; it does not request a commercial solver license.
 - The runner uses Python 3.10 because the unmodified upstream code calls random.sample on a set, an API removed in Python 3.11. Dependency versions are a compatibility environment, not an exact recreation of the authors' old requirements file.
 - Upstream source is fetched at run time and is not copied into this repository. The repository does not supply a root license; public availability is not described as an open-source license grant.
 
 These runs measure the original migration heuristic's scheduling outputs and runtime. They do not measure network packet loss or reproduce Ares/QUEST.
+
+Three variants are recorded separately: the unmodified destination-only mode; the unmodified source-and-destination (`resiliency=true`) mode; and a separately labelled one-line bugfix of the latter. In the selected upstream revision, `get_constraint_dict_for_controller` calculates source-and-destination load but hardcodes `get_constraint_switches(False)`. The original resilient CBF path consequently raises `SwitchNotFound` while removing a source migration. The bugfix forwards the existing `resiliency` argument to that call in a separate temporary copy. The pristine checkout remains unchanged. Original failures remain in the result artifacts; a successful repaired run is not labelled an unmodified author-code success.
 
 ## B. New recovery-mechanism experiment
 
