@@ -204,6 +204,11 @@ def main() -> int:
             write_json(output / f"{stem}.json", record)
             write_json(output / "summary.json", summary)
             print("AUTHOR_RESULT_JSON=" + json.dumps(record, sort_keys=True), flush=True)
+            if not record["success"]:
+                stderr_text = (output / record["stderr_file"]).read_text(encoding="utf-8")
+                print(f"AUTHOR_STDERR_BEGIN={name}", flush=True)
+                print(stderr_text, flush=True)
+                print(f"AUTHOR_STDERR_END={name}", flush=True)
         source_status = git_output(upstream, "status", "--porcelain", "--untracked-files=no")
         if source_status:
             raise RuntimeError("Upstream tracked source changed during author CLI execution")
