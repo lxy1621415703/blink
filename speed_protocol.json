@@ -1,0 +1,19 @@
+{
+  "version": "phase-c-fast-scheduling-1.0",
+  "development_seeds": [0, 30],
+  "holdout_seeds": [1000, 1030],
+  "scale_seeds": [2000, 2005],
+  "scale_flow_counts": [20, 50, 100],
+  "warmup_rounds": 3,
+  "measurement_rounds": 9,
+  "full_rollout_max_flows": 20,
+  "bootstrap_seed": 20261104,
+  "bootstrap_resamples": 2000,
+  "timing": "perf_counter_ns; every invocation includes compile and all portfolio plans; imports, instance generation and independent validation are excluded",
+  "order": "cyclically rotate policy order by instance seed and measurement round",
+  "units": "planner wall time in ms; recovery in uncalibrated ticks; do not add them",
+  "selection": "critical-path, weighted-critical and fixed three-plan portfolio defined before inspecting holdout; no holdout tuning",
+  "portfolio_constraint": "makespan no greater than shared-successor baseline; select least loss then makespan; baseline is always eligible",
+  "scope": "synthetic reserved-path constant-deficit DAG scheduling; scale means number of flow groups, not WAN nodes"
+}
+
