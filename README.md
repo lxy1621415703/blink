@@ -60,3 +60,14 @@ Run [41786900624](https://github.com/lxy1621415703/blink/actions/runs/4178690062
 In the Phase B shared-state scenario (30 paired seeds, 3-5 flow groups), mean weighted unmet demand was 50018.6 for priority-list, 48753.0333 for shared-successor-list, 50316.3 for makespan-rollout, and 48669.0333 for loss-rollout. The candidate reduced this metric by 0.1723% relative to the stronger shared-successor baseline while using about 11.9 times its wall-clock computation. All schedule validation counters were zero and all unchanged-demand negative controls had zero unmet demand. These are limited mechanism-simulation results, not a real-network improvement claim.
 
 [Persistent machine-readable summary](reports/cloud-summary.json) · [Raw CSV, configurations, and diagnostics](https://github.com/lxy1621415703/blink/actions/runs/41786900624/artifacts/13300864894). The raw Actions artifact has seven-day retention; the summary remains in the repository.
+
+
+## Fast scheduling experiment
+
+The incremental engine and fixed lightweight policy set were evaluated with `speed_protocol.json`: development seeds 0-29, untouched holdout seeds 1000-1029, and separate 20/50/100-flow-group scale cases. Each call includes compilation and all portfolio work. Three warmup rounds and nine timed rounds rotate policy order; samples are summarized per instance before aggregation. Full rollout is not run above 20 groups, as specified before evaluation.
+
+[Run 41788972979](https://github.com/lxy1621415703/blink/actions/runs/41788972979) succeeded: 210 cases, 400 exact engine schedule-equivalence checks, zero feasibility violations, and all negative controls zero. On the 30 shared-state holdout cases, mean per-instance median planner time was 2.62184 ms for legacy loss-rollout and 0.93867 ms for its equivalent incremental implementation (64.2% reduction, identical plans). The fixed three-plan portfolio used 0.30484 ms but increased unmet demand by 0.279% relative to loss-rollout; its mean completion time was 14.433 ticks versus 14.400 ticks. Relative to the fast shared-successor baseline, portfolio loss improved only 0.0072%, with no mean makespan improvement. The holdout did not reproduce the larger development-set benefit.
+
+At 100 groups, the equivalent shared-successor implementation reduced planner time from 52.149 ms to 8.789 ms on five shared-state cases. These are task-DAG scale measurements, not a 100-node WAN or packet-level testbed. The current evidence supports implementation acceleration, not a claim of materially shorter real-network recovery.
+
+[Persistent speed/quality summary](reports/fast-summary.json) · [Raw timings, instances and schedules](https://github.com/lxy1621415703/blink/actions/runs/41788972979/artifacts/13302542910).
