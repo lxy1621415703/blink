@@ -9,7 +9,7 @@ This repository runs two explicitly separate experiments on GitHub Actions.
 - Paper: *Switch Migration Scheduling in Distributed SDN Controllers*, NetSoft 2022. This is a later work related to the two-page migration-scheduling poster in the supplied reference collection; the versions are not interchangeable.
 - Run the upstream heuristic CLI on its own supplied instances, without editing its algorithm. Record the command, source revision, environment, exit status, and raw output.
 - Install the Gurobi Python package because the upstream package imports it eagerly. The heuristic run disables the optimizer; it does not request a commercial solver license.
-- The selected Python/dependency environment is a compatibility environment, not an exact recreation of the authors' old requirements file.
+- The runner uses Python 3.10 because the unmodified upstream code calls random.sample on a set, an API removed in Python 3.11. Dependency versions are a compatibility environment, not an exact recreation of the authors' old requirements file.
 - Upstream source is fetched at run time and is not copied into this repository. The repository does not supply a root license; public availability is not described as an open-source license grant.
 
 These runs measure the original migration heuristic's scheduling outputs and runtime. They do not measure network packet loss or reproduce Ares/QUEST.
@@ -24,7 +24,7 @@ The first benchmark deliberately isolates the scheduling mechanism: demand and o
 
 The loss metric is the time integral of weighted unmet demand. Its simulation units are stated in the configuration. It must not be called measured packet loss, milliseconds, or production throughput without a corresponding packet-level experiment and time calibration.
 
-The same instances and observations are used for every scheduler. Include competitive shared-successor-aware scheduling, a completion-time reference where available, a loss-optimal reference for small instances, and a zero-deficit negative control. Validate precedence and resource feasibility independently of the objective.
+The generator uses 30 paired seeds, 3-5 flow groups, two surviving controllers, and synthetic task durations. It includes shared-state, equal-work per-flow-state, and unchanged-demand negative-control scenarios. It does not use a real WAN traffic matrix. The same instances and observations are used for every scheduler. Include competitive shared-successor-aware scheduling, a completion-time reference where available, a loss-optimal reference for small instances, and a zero-deficit negative control. Validate precedence and resource feasibility independently of the objective.
 
 ## Running
 
@@ -32,7 +32,7 @@ The same instances and observations are used for every scheduler. Include compet
 python -m pip install -r requirements.txt
 python -m unittest discover -s source -p 'test_*.py' -v
 python source/run_upstream.py --output results/upstream
-python source/recovery_benchmark.py --output results/mechanism --seeds 30
+python source/recovery_benchmark.py --output results/mechanism --seeds 30 --exact-seeds 10 --milp-seconds 8
 ```
 
 The Actions workflow uploads raw results and diagnostics as an artifact. Inspect per-instance rows and feasibility checks before using aggregate results. A successful workflow is not by itself evidence of a scientific improvement.
