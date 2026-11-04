@@ -52,3 +52,11 @@ Execution status and measured outcomes are recorded in the workflow logs and res
 - Migration scheduling author implementation: https://github.com/nu-lab/Controller-Load-Migration-Scheduling
 - Dynamic Scheduling of Network Updates: https://ratul.org/papers/tr2014-dionysus.pdf
 
+
+## Latest verified cloud result
+
+Run [41786900624](https://github.com/lxy1621415703/blink/actions/runs/41786900624) completed successfully on GitHub Actions at harness revision `1780e7da324049fbfb80de8bdeb3bbf7510c39e1`. The upstream evaluator preserved five original CLI failures, confirmed their independent defect evidence, and passed all four cases in the separately repaired resilient configuration. Failed original rows were not relabelled as successful.
+
+In the Phase B shared-state scenario (30 paired seeds, 3-5 flow groups), mean weighted unmet demand was 50018.6 for priority-list, 48753.0333 for shared-successor-list, 50316.3 for makespan-rollout, and 48669.0333 for loss-rollout. The candidate reduced this metric by 0.1723% relative to the stronger shared-successor baseline while using about 11.9 times its wall-clock computation. All schedule validation counters were zero and all unchanged-demand negative controls had zero unmet demand. These are limited mechanism-simulation results, not a real-network improvement claim.
+
+[Persistent machine-readable summary](reports/cloud-summary.json) · [Raw CSV, configurations, and diagnostics](https://github.com/lxy1621415703/blink/actions/runs/41786900624/artifacts/13300864894). The raw Actions artifact has seven-day retention; the summary remains in the repository.
